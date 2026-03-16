@@ -1,0 +1,10 @@
+[Unit]
+Description=Comitup captive portal web service
+PartOf=comitup.service
+After=comitup.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/comitup-web
+Restart=on-failure
+RestartSec=2

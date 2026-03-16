@@ -1,0 +1,13 @@
+[Unit]
+Description=Comitup Wi-Fi bootstrap service
+Wants=dbus.service iwd.service comitup-iwd-wifi-ensure.service
+After=dbus.service iwd.service comitup-iwd-wifi-ensure.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/comitup-cmd
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

@@ -10,8 +10,10 @@ cat >> "/etc/dhcpcd.conf" <<'EOF'
 # OpenMower specific
 #
 
-# dhcpcd is only used for eth0 (ifupdown),
-# NM is using it's own internal dhcp-client for wlan0
+# Keep dhcpcd away from Wi-Fi so iwd can manage wlan addressing itself.
+denyinterfaces wlan*
+
+# dhcpcd is only used for eth0 (ifupdown)
 interface eth0
 
 # Don't touch resolv.conf...

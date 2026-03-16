@@ -1,5 +1,5 @@
 #!/bin/bash
-# Raspberry Pi Imager custom actions hook (adapted for NetworkManager)
+# Raspberry Pi Imager custom actions hook (adapted for iwd)
 # This script is called by /boot/firstrun.sh on initial first run of the image.
 set -euo pipefail
 
@@ -16,8 +16,8 @@ case "$cmd" in
     set_wlan)
         # Args: SSID PSK_HEX_OR_PLAIN COUNTRY
         SSID=${1:-}; PSK=${2:-}; COUNTRY=${3:-}
-        if [[ -z "$SSID" || -z "$PSK" ]]; then
-            echo "imager_custom: set_wlan missing SSID/PSK" >&2
+        if [[ -z "$SSID" ]]; then
+            echo "imager_custom: set_wlan missing SSID" >&2
             exit 0
         fi
         # Ensure regulatory domain (best effort)
@@ -25,11 +25,32 @@ case "$cmd" in
             rfkill unblock wifi
             iw reg set "$COUNTRY"
         fi
-        # Create NM profile named like the SSID
-        systemctl start NetworkManager.service
-        nmcli con add type wifi ifname "" con-name "$SSID" ssid "$SSID"
-        nmcli con modify "$SSID" wifi-sec.key-mgmt wpa-psk wifi-sec.psk "$PSK"
-        nmcli con modify "$SSID" connection.autoconnect yes
+        install -d -m 700 /var/lib/iwd
+        if [[ -n "$PSK" ]]; then
+            cat >"/var/lib/iwd/${SSID}.psk" <<EOF
+[Settings]
+AutoConnect=true
+
+[Security]
+EOF
+            if [[ "$PSK" =~ ^[0-9A-Fa-f]{64}$ ]]; then
+                cat >>"/var/lib/iwd/${SSID}.psk" <<EOF
+PreSharedKey=${PSK}
+EOF
+            else
+                cat >>"/var/lib/iwd/${SSID}.psk" <<EOF
+Passphrase=${PSK}
+EOF
+            fi
+            chmod 600 "/var/lib/iwd/${SSID}.psk"
+        else
+            cat >"/var/lib/iwd/${SSID}.open" <<EOF
+[Settings]
+AutoConnect=true
+EOF
+            chmod 600 "/var/lib/iwd/${SSID}.open"
+        fi
+        systemctl start iwd.service
     ;;
     
     set_hostname)

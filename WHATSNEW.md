@@ -25,7 +25,7 @@ This document highlights the most relevant changes compared to previous OpenMowe
 - 🐧 Debian Trixie (arm64) images built with [pi‑gen](https://github.com/RPi-Distro/pi-gen).
 - 📁 `openmower` CLI command is in `/usr/local/bin`.
 - 🐳 OpenMower stack: Mosquitto and OpenMowerApp (together with a small Nginx) now run as separate containers and are no longer built into the open_mower_ros image.
-- 📶 WLAN is managed by NetworkManager.
+- 📶 WLAN is managed by iwd plus Comitup.
 - 🔌 LAN is managed by ifupdown.
 - 📡 DHCP for the internal (xCore) LAN is handled by dnsmasq.
 - 🧠 dnsmasq is also used for DNS caching and is managed by the resolvconf package.

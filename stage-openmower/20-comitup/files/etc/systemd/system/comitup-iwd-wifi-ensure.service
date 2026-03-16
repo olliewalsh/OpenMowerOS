@@ -1,0 +1,14 @@
+[Unit]
+Description=Ensure iwd is ready before Comitup
+Wants=iwd.service
+After=iwd.service
+Before=comitup.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=/usr/sbin/rfkill unblock wifi
+ExecStart=/bin/sh -c 'for _ in $(seq 1 10); do /usr/bin/iwctl device list >/dev/null 2>&1 && exit 0; sleep 1; done; exit 1'
+
+[Install]
+WantedBy=multi-user.target
