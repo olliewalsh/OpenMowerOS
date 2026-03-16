@@ -1,0 +1,62 @@
+#!/bin/bash
+set -euo pipefail
+
+PIDFILE="/run/slip-link.pid"
+SLATTACH_BIN="/usr/local/sbin/slattach"
+TTY_DEV="/dev/ttyAMA0"
+SLIP_DEV="sl0"
+
+configure_link() {
+    ip addr replace 192.0.2.1 peer 192.0.2.2 dev "$SLIP_DEV"
+    ip link set "$SLIP_DEV" mtu 1500 up
+}
+
+start_link() {
+    if [[ -f "$PIDFILE" ]] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
+        exit 0
+    fi
+
+    mkdir -p /run
+    "$SLATTACH_BIN" -p slip -s 460800 "$TTY_DEV" </dev/null >/var/log/slattach.log 2>&1 &
+    echo $! >"$PIDFILE"
+
+    for _ in $(seq 1 20); do
+        if ip link show "$SLIP_DEV" >/dev/null 2>&1; then
+            configure_link
+            exit 0
+        fi
+        sleep 1
+    done
+
+    echo "slip-link: timed out waiting for $SLIP_DEV" >&2
+    stop_link
+    exit 1
+}
+
+stop_link() {
+    if ip link show "$SLIP_DEV" >/dev/null 2>&1; then
+        ip link set "$SLIP_DEV" down || true
+    fi
+
+    if [[ -f "$PIDFILE" ]]; then
+        kill "$(cat "$PIDFILE")" 2>/dev/null || true
+        rm -f "$PIDFILE"
+    fi
+}
+
+case "${1:-}" in
+    start)
+        start_link
+        ;;
+    stop)
+        stop_link
+        ;;
+    restart)
+        stop_link
+        start_link
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart}" >&2
+        exit 1
+        ;;
+esac

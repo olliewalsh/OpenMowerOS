@@ -20,6 +20,8 @@ install -m 0755 slattach /usr/local/sbin/slattach
 cd /
 rm -rf "$BUILD_DIR"
 
+systemctl enable slip-link.service
+
 # Remove any serial console entries while preserving the rest of the line
 sed -i -E 's/(^| )console=(serial0|ttyAMA0|ttyS0)(,[0-9]+)?//g' /boot/firmware/cmdline.txt
 # Collapse multiple spaces and trim

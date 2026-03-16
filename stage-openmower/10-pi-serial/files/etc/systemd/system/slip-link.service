@@ -1,0 +1,11 @@
+[Unit]
+Description=Bring up SLIP link on ttyAMA0
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/slip-link start
+ExecStop=/usr/local/sbin/slip-link stop
+
+[Install]
+WantedBy=multi-user.target
